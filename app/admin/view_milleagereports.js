@@ -2,7 +2,16 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 
 const ViewMileageReportScreen = ({ route }) => {
-  const { mileageReport } = route.params; // Assume mileageReport is passed as a prop
+  //const { mileageReport } = route.params; // Assume mileageReport is passed as a prop
+  const mileageReport = {
+    date: "2023-07-29",
+    startLocation: "Home",
+    endLocation: "Office",
+    distance: "15 miles",
+    purpose: "Work commute",
+    staffName: "John Doe",
+    notes: "Traffic was heavy in the morning.",
+  };
 
   return (
     <View style={styles.container}>

@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
-import PDFLib, { PDFDocument, PDFPage } from "react-native-pdf-lib";
+import * as Print from "expo-print";
 import * as FileSystem from "expo-file-system";
 
 const ViewInvoiceScreen = (
@@ -34,64 +34,59 @@ const ViewInvoiceScreen = (
 
   const handleDownloadInvoice = async () => {
     try {
-      // Create a new PDF document
-      const pdfDoc = await PDFDocument.create();
+      // Create a HTML template for the invoice content
+      const htmlContent = `
+        <div>
+          <h1>Invoice Details</h1>
+          <p><strong>Invoice Number:</strong> ${dummyInvoice.invoiceNumber}</p>
+          <p><strong>Date:</strong> ${dummyInvoice.date}</p>
+          <p><strong>Due Date:</strong> ${dummyInvoice.dueDate}</p>
+          <p><strong>Client Name:</strong> ${dummyInvoice.client}</p>
+          <p><strong>Invoice Amount:</strong> $${dummyInvoice.amount}</p>
+          <p><strong>Description:</strong> ${dummyInvoice.description}</p>
+          <p><strong>Payment Status:</strong> ${dummyInvoice.paymentStatus}</p>
+        </div>
+      `;
 
-      // Add a new page to the document
-      const page = pdfDoc.addPage([400, 600]);
-
-      // Write the invoice details on the page
-      const { width, height } = page.getSize();
-      page.drawText(`Invoice Number: ${dummyInvoice.invoiceNumber}`, {
-        x: 50,
-        y: height - 100,
-        size: 20,
-      });
-      page.drawText(`Date: ${dummyInvoice.date}`, {
-        x: 50,
-        y: height - 150,
-        size: 20,
-      });
-      page.drawText(`Due Date: ${dummyInvoice.dueDate}`, {
-        x: 50,
-        y: height - 200,
-        size: 20,
-      });
-      page.drawText(`Client Name: ${dummyInvoice.client}`, {
-        x: 50,
-        y: height - 250,
-        size: 20,
-      });
-      page.drawText(`Invoice Amount: $${dummyInvoice.amount}`, {
-        x: 50,
-        y: height - 300,
-        size: 20,
-      });
-      page.drawText(`Description: ${dummyInvoice.description}`, {
-        x: 50,
-        y: height - 350,
-        size: 20,
-      });
-      page.drawText(`Payment Status: ${dummyInvoice.paymentStatus}`, {
-        x: 50,
-        y: height - 400,
-        size: 20,
+      // Generate the PDF file
+      const { uri } = await Print.printToFileAsync({
+        html: htmlContent,
       });
 
-      // Generate the PDF as a base64 string
-      const pdfBytes = await pdfDoc.saveAsBase64({ dataUri: true });
+      // Show success message to the user
+      Alert.alert("Invoice Downloaded", "The invoice has been downloaded.");
 
-      // Get the directory for saving the PDF
-      const dir = FileSystem.documentDirectory + "invoices/";
-      await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
+      // Use the URI for any further actions, such as sharing or uploading the PDF
+      console.log("PDF URI:", uri);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      Alert.alert("Error", "Failed to generate PDF.");
+    }
+  };
+
+  const handleDownloadInvoicePermanent = async () => {
+    try {
+      // ... Rest of the code ...
+
+      // Generate the PDF file
+      const { uri } = await Print.printToFileAsync({
+        html: htmlContent,
+      });
+
+      // Create a new directory in the app's documents directory
+      const documentsDirectory = FileSystem.documentDirectory + "invoices/";
+      await FileSystem.makeDirectoryAsync(documentsDirectory, {
+        intermediates: true,
+      });
 
       // Generate a unique filename for the PDF
       const pdfFilename = "invoice.pdf";
-      const pdfPath = dir + pdfFilename;
+      const pdfPath = documentsDirectory + pdfFilename;
 
-      // Write the PDF to a file
-      await FileSystem.writeAsStringAsync(pdfPath, pdfBytes, {
-        encoding: FileSystem.EncodingType.Base64,
+      // Move the PDF from the cache directory to the documents directory
+      await FileSystem.moveAsync({
+        from: uri,
+        to: pdfPath,
       });
 
       // Show success message to the user
@@ -104,7 +99,6 @@ const ViewInvoiceScreen = (
       Alert.alert("Error", "Failed to generate PDF.");
     }
   };
-
   return (
     <View style={styles.container}>
       <Text style={styles.invoiceTitle}>Invoice Details</Text>
