@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import PDFLib, { PDFDocument, PDFPage } from "react-native-pdf-lib";
-import RNFS from "react-native-fs";
+import * as FileSystem from "expo-file-system";
 
 const ViewInvoiceScreen = (
   {
@@ -33,68 +33,76 @@ const ViewInvoiceScreen = (
   };
 
   const handleDownloadInvoice = async () => {
-   // try {
-    //   // Create a new PDF document
-    //   const pdfDoc = await PDFDocument.create();
+    try {
+      // Create a new PDF document
+      const pdfDoc = await PDFDocument.create();
 
-    //   // Add a new page to the document
-    //   const page = pdfDoc.addPage([400, 600]);
+      // Add a new page to the document
+      const page = pdfDoc.addPage([400, 600]);
 
-    //   // Write the invoice details on the page
-    //   const { width, height } = page.getSize();
-    //   page.drawText(`Invoice Number: ${dummyInvoice.invoiceNumber}`, {
-    //     x: 50,
-    //     y: height - 100,
-    //     size: 20,
-    //   });
-    //   page.drawText(`Date: ${dummyInvoice.date}`, {
-    //     x: 50,
-    //     y: height - 150,
-    //     size: 20,
-    //   });
-    //   page.drawText(`Due Date: ${dummyInvoice.dueDate}`, {
-    //     x: 50,
-    //     y: height - 200,
-    //     size: 20,
-    //   });
-    //   page.drawText(`Client Name: ${dummyInvoice.client}`, {
-    //     x: 50,
-    //     y: height - 250,
-    //     size: 20,
-    //   });
-    //   page.drawText(`Invoice Amount: $${dummyInvoice.amount}`, {
-    //     x: 50,
-    //     y: height - 300,
-    //     size: 20,
-    //   });
-    //   page.drawText(`Description: ${dummyInvoice.description}`, {
-    //     x: 50,
-    //     y: height - 350,
-    //     size: 20,
-    //   });
-    //   page.drawText(`Payment Status: ${dummyInvoice.paymentStatus}`, {
-    //     x: 50,
-    //     y: height - 400,
-    //     size: 20,
-    //   });
-    //   // Add more details here, if needed
+      // Write the invoice details on the page
+      const { width, height } = page.getSize();
+      page.drawText(`Invoice Number: ${dummyInvoice.invoiceNumber}`, {
+        x: 50,
+        y: height - 100,
+        size: 20,
+      });
+      page.drawText(`Date: ${dummyInvoice.date}`, {
+        x: 50,
+        y: height - 150,
+        size: 20,
+      });
+      page.drawText(`Due Date: ${dummyInvoice.dueDate}`, {
+        x: 50,
+        y: height - 200,
+        size: 20,
+      });
+      page.drawText(`Client Name: ${dummyInvoice.client}`, {
+        x: 50,
+        y: height - 250,
+        size: 20,
+      });
+      page.drawText(`Invoice Amount: $${dummyInvoice.amount}`, {
+        x: 50,
+        y: height - 300,
+        size: 20,
+      });
+      page.drawText(`Description: ${dummyInvoice.description}`, {
+        x: 50,
+        y: height - 350,
+        size: 20,
+      });
+      page.drawText(`Payment Status: ${dummyInvoice.paymentStatus}`, {
+        x: 50,
+        y: height - 400,
+        size: 20,
+      });
 
-    //   // Generate the PDF as a base64 string
-    //   const pdfBytes = await pdfDoc.saveAsBase64({ dataUri: true });
+      // Generate the PDF as a base64 string
+      const pdfBytes = await pdfDoc.saveAsBase64({ dataUri: true });
 
-    //   // Write the PDF to a file
-    //   const pdfPath = `${RNFS.DocumentDirectoryPath}/invoice.pdf`;
-    //   await RNFS.writeFile(pdfPath, pdfBytes, "base64");
+      // Get the directory for saving the PDF
+      const dir = FileSystem.documentDirectory + "invoices/";
+      await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
 
-    //   // Show success message to the user
-    //   Alert.alert("Invoice Downloaded", "The invoice has been downloaded.");
+      // Generate a unique filename for the PDF
+      const pdfFilename = "invoice.pdf";
+      const pdfPath = dir + pdfFilename;
 
-    //   // Use the pdfPath for any further actions, such as sharing or uploading the PDF
-    //   console.log("PDF Path:", pdfPath);
-    // } catch (error) {
-    //   console.error("Error generating PDF:", error);
-    //   Alert.alert("Error", "Failed to generate PDF.");
-    // }
+      // Write the PDF to a file
+      await FileSystem.writeAsStringAsync(pdfPath, pdfBytes, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Show success message to the user
+      Alert.alert("Invoice Downloaded", "The invoice has been downloaded.");
+
+      // Use the pdfPath for any further actions, such as sharing or uploading the PDF
+      console.log("PDF Path:", pdfPath);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      Alert.alert("Error", "Failed to generate PDF.");
+    }
   };
 
   return (
